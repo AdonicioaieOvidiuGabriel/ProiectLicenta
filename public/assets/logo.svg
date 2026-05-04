@@ -1,0 +1,17 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="100" cy="100" r="95" fill="#1b3d6d" opacity="0.95"/>
+  
+  <!-- Inner decorative circle -->
+  <circle cx="100" cy="100" r="85" fill="none" stroke="#93C5FD" stroke-width="2"/>
+  
+  <!-- LC Letters - Modern Style -->
+  <text x="100" y="115" font-family="Arial, sans-serif" font-size="68" font-weight="bold" fill="#93C5FD" text-anchor="middle" letter-spacing="2">LC</text>
+  
+  <!-- Bottom accent line -->
+  <line x1="65" y1="135" x2="135" y2="135" stroke="#93C5FD" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Small decorative dots -->
+  <circle cx="50" cy="100" r="3" fill="#93C5FD" opacity="0.6"/>
+  <circle cx="150" cy="100" r="3" fill="#93C5FD" opacity="0.6"/>
+</svg>
