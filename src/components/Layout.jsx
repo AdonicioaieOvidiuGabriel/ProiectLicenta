@@ -162,8 +162,8 @@ export function Footer() {
               <a href="tel:+40230522978" className="flex items-center space-x-2 hover:text-usv-gold transition-colors">
                 <Phone size={16} /> <span>+40 230 522 978</span>
               </a>
-              <a href="mailto:contact@licentaconnect.ro" className="flex items-center space-x-2 hover:text-usv-gold transition-colors">
-                <Mail size={16} /> <span>contact@licentaconnect.ro</span>
+              <a href="mailto:ovidiu.adonicioaie@student.usv.ro" className="flex items-center space-x-2 hover:text-usv-gold transition-colors">
+                <Mail size={16} /> <span>ovidiu.adonicioaie@student.usv.ro</span>
               </a>
               <a href="#" className="flex items-center space-x-2 hover:text-usv-gold transition-colors">
                 <MapPin size={16} /> <span>Suceava, România</span>

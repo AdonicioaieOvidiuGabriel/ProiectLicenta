@@ -1,0 +1,44 @@
+[
+  {
+    "id": "software_general",
+    "weight": 1,
+    "profileTokens": ["software", "aplicatie", "aplicatii", "web", "mobile", "platforma", "platforme", "sistem informatic"],
+    "topicPositiveTokens": ["software", "aplicatie", "aplicatii", "web", "platforma", "platforme", "sistem informatic", "online"],
+    "topicNegativeTokens": ["firmware", "microcontroler", "microcontroller", "senzor", "rfid", "scada", "plc"]
+  },
+  {
+    "id": "backend_data",
+    "weight": 1.25,
+    "profileTokens": ["backend", "back-end", "baze de date", "baza de date", "database", "sql", "nosql", "postgres", "mysql", "mongodb", "big data", "api", "server"],
+    "topicPositiveTokens": ["backend", "back-end", "baza de date", "database", "sql", "api", "server", "gestiune", "management"],
+    "topicNegativeTokens": ["frontend", "front-end", "ui", "ux", "interfata"]
+  },
+  {
+    "id": "frontend_ui",
+    "weight": 1,
+    "profileTokens": ["frontend", "front-end", "ui", "ux", "interfata", "design"],
+    "topicPositiveTokens": ["frontend", "front-end", "ui", "ux", "interfata", "design"],
+    "topicNegativeTokens": ["firmware", "microcontroler", "microcontroller", "scada", "plc"]
+  },
+  {
+    "id": "ai_data_science",
+    "weight": 1.1,
+    "profileTokens": ["ai", "ia", "machine learning", "ml", "data science", "predictie", "predictive", "analiza date", "viziune", "nlp"],
+    "topicPositiveTokens": ["ai", "ia", "machine learning", "data", "predict", "recomandare", "viziune", "clasificare", "analiza"],
+    "topicNegativeTokens": ["microcontroler", "firmware", "senzor", "rfid"]
+  },
+  {
+    "id": "business_information_systems",
+    "weight": 1.15,
+    "profileTokens": ["business", "erp", "economic", "procese economice", "digitalizare", "management", "comert", "ecommerce", "analist"],
+    "topicPositiveTokens": ["management", "business", "economic", "erp", "comert", "e-commerce", "online", "platforma"],
+    "topicNegativeTokens": ["microcontroler", "embedded", "rfid", "senzor"]
+  },
+  {
+    "id": "embedded_iot_hardware",
+    "weight": 1,
+    "profileTokens": ["embedded", "iot", "firmware", "microcontroler", "microcontroller", "senzor", "scada", "plc", "arduino", "esp32"],
+    "topicPositiveTokens": ["embedded", "iot", "firmware", "microcontroler", "microcontroller", "senzor", "scada", "plc", "arduino", "esp32", "rfid"],
+    "topicNegativeTokens": ["frontend", "ux", "ui"]
+  }
+]

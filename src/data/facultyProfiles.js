@@ -45,19 +45,33 @@ export const FACULTY_PROFILES = {
     additionalSkillsPlaceholder: 'Ex: Audit intern, fiscalitate, ERP, bugetare, control de gestiune...',
     interestsPlaceholder: 'Ex: Performanță financiară, antreprenoriat, politici publice, turism și comerț...'
   },
-  FDSA: {
-    label: 'FDSA - Drept și Științe Administrative',
-    specializations: ['Drept', 'Administrație Publică', 'Poliție Locală'],
-    skillTags: ['Drept civil', 'Drept penal', 'Drept administrativ', 'Legislație UE', 'Argumentare juridică', 'Analiză jurisprudență', 'Redactare acte', 'Etică profesională'],
-    applicationDomains: ['Juridic/Administrativ', 'Educație', 'Finanțe/Afaceri'],
+  FIM: {
+    label: 'FIM - Inginerie Mecanică, Autovehicule și Robotică',
+    specializationsByLevel: {
+      licenta: [
+        'Tehnologia construcțiilor de maşini',
+        'Inginerie mecanică',
+        'Mecatronică',
+        'Robotică',
+        'Autovehicule rutiere'
+      ],
+      disertatie: [
+        'Ingineria şi managementul calităţii, sănătăţii şi securităţii în muncă',
+        'Expertiză tehnică, evaluare economică şi management',
+        'Mecatronică aplicată',
+        'Inginerie mecanică asistată de calculator'
+      ]
+    },
+    skillTags: ['CAD', 'FEM', 'MATLAB', 'SolidWorks', 'Control automat', 'Robotica', 'Senzori', 'Modelare dinamica'],
+    applicationDomains: ['Automotive', 'Prototipare', 'Sisteme mecatronice', 'Analiză structurală'],
     projectTypes: [
-      'Analiză legislativă aplicată',
-      'Studiu de caz juridic/administrativ',
-      'Cercetare doctrinară și comparativă'
+      'Prototip hardware / dispozitiv experimental',
+      'Modelare și simulare (FEM/CFD)',
+      'Analiză experimentală și validare'
     ],
-    skillsHint: 'Selectează competențe juridice și administrative relevante pentru domeniul de interes.',
-    additionalSkillsPlaceholder: 'Ex: Mediere, procedură contravențională, achiziții publice, contencios administrativ...',
-    interestsPlaceholder: 'Ex: Drepturile omului, administrație locală, digitalizarea serviciilor publice...'
+    skillsHint: 'Selectează competențe tehnice relevante: CAD, modelare, control, programare embedded sau instrumentație.',
+    additionalSkillsPlaceholder: 'Ex: SolidWorks, ANSYS, MATLAB/Simulink, Arduino/STM32, LabVIEW...',
+    interestsPlaceholder: 'Ex: Dinamica vehiculelor, materiale compozite, control motoare electrice, automatizări...'
   },
   FLSC: {
     label: 'FLSC - Litere și Știinte ale Comunicării',

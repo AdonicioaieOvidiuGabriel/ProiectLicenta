@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import AuthModal from '../components/AuthModal';
+import AccountBadge from '../components/AccountBadge';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { FACULTY_LABELS, FACULTY_PROFILES } from '../data/facultyProfiles';
+import { clearAuthSession, readAuthSession, writeAuthSession } from '../utils/authSession';
 
 const FACULTY_QUIZ_CONFIG = FACULTY_PROFILES;
 
@@ -41,6 +45,16 @@ const SPECIALIZATION_META = {
   'securitate cibernetica': { label: 'Securitate Cibernetică (SC)', value: 'Securitate Cibernetică' },
   'sisteme moderne pentru conducerea proceselor energetice': { label: 'Sisteme Moderne pentru Conducerea Proceselor Energetice (SMCPE)', value: 'Sisteme Moderne pentru Conducerea Proceselor Energetice' },
   'tehnici avansate in masini si actionari electrice': { label: 'Tehnici Avansate în Mașini și Acționări Electrice (TAMAE)', value: 'Tehnici Avansate în Mașini și Acționări Electrice' }
+  ,
+  'tehnologia constructiilor de masini': { label: 'Tehnologia construcțiilor de maşini (TCM)', value: 'Tehnologia construcțiilor de maşini' },
+  'inginerie mecanica': { label: 'Inginerie mecanică (IM)', value: 'Inginerie mecanică' },
+  'mecatronica': { label: 'Mecatronică (MCT)', value: 'Mecatronică' },
+  'robotica': { label: 'Robotică (RB)', value: 'Robotică' },
+  'autovehicule rutiere': { label: 'Autovehicule rutiere (AR)', value: 'Autovehicule rutiere' },
+  'ingineria si managementul calitatii, sanatatii si securitatii in munca': { label: 'Ingineria şi managementul calităţii, sănătăţii şi securităţii în muncă (IMCSSM)', value: 'Ingineria şi managementul calităţii, sănătăţii şi securităţii în muncă' },
+  'expertiza tehnica, evaluare economica si management': { label: 'Expertiză tehnică, evaluare economică şi management (ETEM)', value: 'Expertiză tehnică, evaluare economică şi management' },
+  'mecatronica aplicata': { label: 'Mecatronică aplicată (MCT-A)', value: 'Mecatronică aplicată' },
+  'inginerie mecanica asistata de calculator': { label: 'Inginerie mecanică asistată de calculator (MEC-AC)', value: 'Inginerie mecanică asistată de calculator' }
 };
 
 const normalizeText = (value) =>
@@ -93,6 +107,9 @@ const getSpecializationsForSelection = (faculty, studyLevel) => {
 
 export default function StudentQuiz() {
   const navigate = useNavigate();
+  const [authAccount, setAuthAccount] = useState(() => readAuthSession());
+  const [authMode, setAuthMode] = useState(null);
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -112,10 +129,48 @@ export default function StudentQuiz() {
   const isInitialMount = React.useRef(true);
 
   const totalSteps = 4;
+  const lockedAcademicProfile = useMemo(() => {
+    const faculty = normalizeFacultyCode(authAccount?.faculty);
+    const studyLevel = String(authAccount?.studyLevel || '').trim().toLowerCase();
+    const specialization = String(authAccount?.specialization || '').trim();
+
+    if (!faculty || !studyLevel || !specialization) {
+      return null;
+    }
+
+    const availableSpecializations = getSpecializationsForSelection(faculty, studyLevel);
+    if (!availableSpecializations.includes(specialization)) {
+      return null;
+    }
+
+    return { faculty, studyLevel, specialization };
+  }, [authAccount]);
+
   const specializationOptions = useMemo(
     () => getSpecializationsForSelection(formData.faculty, formData.studyLevel).map(formatSpecializationOption),
     [formData.faculty, formData.studyLevel]
   );
+
+  useEffect(() => {
+    if (!lockedAcademicProfile) {
+      return;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      faculty: lockedAcademicProfile.faculty,
+      studyLevel: lockedAcademicProfile.studyLevel,
+      specialization: lockedAcademicProfile.specialization
+    }));
+
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.faculty;
+      delete next.studyLevel;
+      delete next.specialization;
+      return next;
+    });
+  }, [lockedAcademicProfile]);
 
   useEffect(() => {
     if (!formData.specialization) return;
@@ -226,6 +281,18 @@ export default function StudentQuiz() {
     localStorage.removeItem('quizDraft');
     setShowDraftBanner(false);
   };
+
+  const handleAuthSuccess = (account) => {
+    setAuthAccount(account);
+    writeAuthSession(account);
+  };
+
+  const handleLogout = () => {
+    setAuthAccount(null);
+    clearAuthSession();
+  };
+
+  const handleRequestLogout = () => setLogoutConfirmOpen(true);
 
   const showToast = useCallback((message, type = 'info') => {
     setToast({ message, type });
@@ -371,7 +438,9 @@ export default function StudentQuiz() {
           faculty: normalizeFacultyCode(formData.faculty),
             skills: allSkills.join(', '),
             selectedSkillTags: formData.skills,
-            additionalSkills: formData.additionalSkills
+            additionalSkills: formData.additionalSkills,
+            email: authAccount?.email || '',
+            studentName: authAccount?.fullName || ''
         };
 
         console.log("Sending student profile to AI backend...", payload);
@@ -539,31 +608,73 @@ export default function StudentQuiz() {
       )}
       
       {/* Header */}
-      <header className="bg-gradient-to-r from-slate-800 to-slate-900 text-white py-6 px-6 md:px-20 shadow-lg border-b border-blue-400/30">
-        <div className="max-w-5xl mx-auto flex justify-between items-center">
-            <Link to="/" className="flex items-center gap-4 hover:opacity-90 transition-opacity">
-                <div className="flex flex-col items-start">
-                    <span className="text-white text-2xl font-black tracking-tight leading-none">LICENTA<span className="text-blue-300">CONNECT</span></span>
-                    <span className="text-white/60 text-xs font-bold uppercase tracking-[0.2em] mt-1 text-left">Universitatea Ștefan cel Mare</span>
-                </div>
-            </Link>
+      <header className="sticky top-0 z-40 w-full bg-slate-900/95 text-white shadow-lg backdrop-blur-sm border-b border-blue-400/30 px-4 md:px-20">
+        <div className="w-full h-24 flex justify-between items-center relative">
+          <Link to="/" className="flex items-center gap-4 z-10 hover:opacity-90 transition-opacity">
+            <div className="flex flex-col items-start">
+              <span className="text-white text-2xl font-black tracking-tight leading-none">LICENTA<span className="text-blue-300">CONNECT</span></span>
+              <span className="text-white/60 text-xs font-bold uppercase tracking-[0.2em] mt-1 text-left">Universitatea Ștefan cel Mare</span>
+            </div>
+          </Link>
+
+          {authAccount ? (
+            <AccountBadge account={authAccount} onClick={() => navigate('/contul-meu')} onLogout={handleRequestLogout} />
+          ) : (
+            <div className="flex items-center gap-2 z-10">
+              <button
+                type="button"
+                onClick={() => setAuthMode('login')}
+                className="px-4 py-2 rounded-sm border border-white/20 text-white text-sm font-bold font-serif tracking-tight hover:bg-white/5 hover:border-blue-300/60 transition-colors"
+              >
+                Log in
+              </button>
+              <button
+                type="button"
+                onClick={() => setAuthMode('signup')}
+                className="px-4 py-2 rounded-sm bg-blue-600 text-white text-sm font-bold font-serif tracking-tight hover:bg-blue-700 transition-colors"
+              >
+                Sign up
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
+      <AuthModal
+        isOpen={Boolean(authMode)}
+        mode={authMode || 'login'}
+        onClose={() => setAuthMode(null)}
+        onSwitchMode={(nextMode) => setAuthMode(nextMode)}
+        onAuthSuccess={handleAuthSuccess}
+      />
+
+      <ConfirmDialog
+        isOpen={logoutConfirmOpen}
+        title="Vrei să te deconectezi?"
+        description="Dacă ieși acum, va trebui să te autentifici din nou pentru a continua chestionarul."
+        confirmLabel="Da, deconectează-mă"
+        cancelLabel="Rămân conectat"
+        onCancel={() => setLogoutConfirmOpen(false)}
+        onConfirm={() => {
+          setLogoutConfirmOpen(false);
+          handleLogout();
+        }}
+      />
+
       {/* Main Content */}
-      <main className="flex-grow flex flex-col items-center p-6 md:p-12">
-        <div className="w-full max-w-5xl px-2 md:px-6 py-6 inline-flex flex-col items-center">
-          <div className="w-full flex flex-col items-center gap-3 mb-10">
-            <h1 className="text-center text-slate-800 text-3xl md:text-4xl font-bold leading-tight">
-              Configurare Profil Academic
+      <main className="flex-grow flex flex-col items-center p-4 sm:p-6 md:p-12">
+        <div className="w-full max-w-5xl px-1 md:px-6 py-4 md:py-6 inline-flex flex-col items-center">
+          <div className="w-full flex flex-col items-center gap-3 mb-8 md:mb-10">
+            <h1 className="text-center text-slate-800 text-2xl sm:text-3xl md:text-4xl font-bold leading-tight">
+              Completează profilul pentru recomandări de teme
             </h1>
-            <p className="max-w-2xl text-center text-slate-700 text-base leading-6">
-              Completează quiz-ul pentru a permite algoritmului nostru AI să identifice cele mai potrivite teme de licență și coordonatori conform profilului tău.
+            <p className="max-w-2xl text-center text-slate-700 text-sm sm:text-base leading-6">
+              Răspunsurile tale sunt folosite pentru a genera recomandări de teme potrivite profilului academic și direcțiilor tale de interes.
             </p>
           </div>
 
           <div className="w-full max-w-4xl px-4 mb-10">
-            <div className="flex items-start justify-between gap-2 md:gap-3">
+            <div className="grid grid-cols-2 gap-x-3 gap-y-4 md:flex md:items-start md:justify-between md:gap-3">
               {[1, 2, 3, 4].map((step) => {
                 const isClickable = step <= currentStep || (step === currentStep + 1 && canAdvanceToNextStep());
                 const isActive = currentStep === step;
@@ -572,11 +683,11 @@ export default function StudentQuiz() {
                 const isLast = step === 4;
 
                 return (
-                  <div key={step} className={`flex items-start ${isLast ? '' : 'flex-1'}`}>
+                  <div key={step} className={`flex items-start ${isLast ? '' : 'md:flex-1'}`}>
                     <button
                       type="button"
                       onClick={() => isClickable && handleStepClick(step)}
-                      className="flex flex-col items-center gap-2 disabled:cursor-not-allowed"
+                      className="flex w-full flex-col items-center gap-2 disabled:cursor-not-allowed md:w-auto"
                       disabled={!isClickable}
                     >
                       <span className={`w-11 h-11 rounded-full inline-flex items-center justify-center text-sm font-bold transition-all duration-300 ease-in-out ${
@@ -594,13 +705,13 @@ export default function StudentQuiz() {
                           step
                         )}
                       </span>
-                      <span className={`text-xs uppercase tracking-wide font-semibold text-center ${currentStep >= step ? 'text-slate-800' : 'text-slate-400'}`}>
+                      <span className={`max-w-[140px] text-[11px] leading-tight uppercase tracking-wide font-semibold text-center ${currentStep >= step ? 'text-slate-800' : 'text-slate-400'}`}>
                         {['Date Academice', 'Competențe', 'Interese', 'Carieră'][step - 1]}
                       </span>
                     </button>
 
                     {!isLast && (
-                      <div className="pt-5 flex-1 px-2 md:px-3">
+                      <div className="hidden pt-5 flex-1 px-2 md:block md:px-3">
                         <div className="h-0.5 bg-slate-300 rounded-full overflow-hidden">
                           <div className={`h-full transition-all duration-300 ease-in-out ${isConnectorActive ? 'w-full bg-slate-800' : 'w-0 bg-slate-800'}`} />
                         </div>
@@ -613,31 +724,37 @@ export default function StudentQuiz() {
           </div>
 
           <div className="w-full max-w-4xl bg-white rounded-2xl shadow-[0px_10px_30px_-5px_rgba(25,32,65,0.15)] outline outline-1 outline-blue-100 overflow-hidden">
-            <div className="p-8 md:p-12 flex flex-col gap-10">
+            <div className="p-5 sm:p-6 md:p-12 flex flex-col gap-8 md:gap-10">
               <div>
-                <h2 className="text-2xl font-bold text-slate-800 mb-2">
-                  {currentStep === 1 && 'Profil Academic'}
-                  {currentStep === 2 && 'Abilități și Competențe'}
-                  {currentStep === 3 && 'Interese de Cercetare'}
-                  {currentStep === 4 && 'Obiective Profesionale'}
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2">
+                  {currentStep === 1 && 'Date academice'}
+                  {currentStep === 2 && 'Competențe relevante'}
+                  {currentStep === 3 && 'Domeniu și tip de proiect'}
+                  {currentStep === 4 && 'Direcție profesională'}
                 </h2>
                 <p className="text-slate-600 text-sm leading-6">
-                  {currentStep === 1 && 'Selectează nivelul, facultatea și specializarea pentru o filtrare precisă.'}
-                  {currentStep === 2 && 'Alege competențele-cheie și completează cu detalii relevante pentru profilul tău.'}
-                  {currentStep === 3 && 'Definește domeniul, tipul proiectului și direcțiile care te pasionează.'}
-                  {currentStep === 4 && 'Spune-ne ce traseu profesional îți dorești pentru a calibra recomandările.'}
+                  {currentStep === 1 && 'Datele academice sunt preluate automat din profilul contului tău.'}
+                  {currentStep === 2 && 'Alege competențele-cheie și completează cu detalii despre tehnologiile pe care le stăpânești.'}
+                  {currentStep === 3 && 'Precizează domeniul în care vrei să aplici tema și tipul de proiect pe care îl preferi.'}
+                  {currentStep === 4 && 'Spune-ne în ce direcție profesională vrei să mergi pentru a calibra recomandările.'}
                 </p>
               </div>
 
-              <div className="min-h-[320px]">
+              <div className="min-h-[260px] md:min-h-[320px]">
                 {currentStep === 1 && (
                   <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-300 ease-in-out">
+                    {lockedAcademicProfile && (
+                      <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                        Datele academice au fost preluate automat din profilul contului. Le poți modifica din pagina contului.
+                      </div>
+                    )}
+
                     <div className="flex flex-col gap-4">
                       <label className="font-bold text-slate-700 text-lg flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
                         </svg>
-                        Nivel de studii
+                        Nivel de studii și ciclu
                       </label>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {STUDY_LEVEL_OPTIONS.map((option) => {
@@ -646,6 +763,7 @@ export default function StudentQuiz() {
                             <button
                               key={option.value}
                               type="button"
+                              disabled={Boolean(lockedAcademicProfile)}
                               onClick={() => {
                                 setFormData((prev) => ({ ...prev, studyLevel: option.value, specialization: '' }));
                                 if (fieldErrors.studyLevel) {
@@ -699,6 +817,7 @@ export default function StudentQuiz() {
                             <button
                               key={key}
                               type="button"
+                              disabled={Boolean(lockedAcademicProfile)}
                               onClick={() => {
                                 handleChange({ target: { name: 'faculty', value: key } });
                                 if (fieldErrors.faculty) {
@@ -746,6 +865,7 @@ export default function StudentQuiz() {
                               <button
                                 key={option.value}
                                 type="button"
+                                disabled={Boolean(lockedAcademicProfile)}
                                 onClick={() => {
                                   setFormData((prev) => ({ ...prev, specialization: option.value }));
                                   if (fieldErrors.specialization) {
@@ -787,7 +907,7 @@ export default function StudentQuiz() {
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4" />
                         </svg>
-                        Competențe tehnice
+                        Competențe și tehnologii
                       </label>
                       <p className="text-sm text-slate-600">{skillsHint}</p>
                       {skillSuggestions.length > 0 && (
@@ -840,7 +960,7 @@ export default function StudentQuiz() {
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 1.343-3 3h6c0-1.657-1.343-3-3-3zm0 0V5m0 11v3m7-7h-3m-8 0H5" />
                         </svg>
-                        Domeniul de aplicare vizat
+                        Domeniul în care vrei să aplici tema
                       </label>
                       {applicationDomainSuggestions.length > 0 && (
                         <div className="flex flex-wrap gap-2">
@@ -885,7 +1005,7 @@ export default function StudentQuiz() {
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 3a.75.75 0 01.75.75V5h3V3.75a.75.75 0 011.5 0V5h1.25a2 2 0 012 2v10a2 2 0 01-2 2H7.75a2 2 0 01-2-2V7a2 2 0 012-2H9V3.75A.75.75 0 019.75 3z" />
                         </svg>
-                        Tipul proiectului dorit
+                        Tipul proiectului preferat
                       </label>
                       {projectTypeSuggestions.length > 0 && (
                         <div className="flex flex-wrap gap-2">
@@ -932,7 +1052,7 @@ export default function StudentQuiz() {
                         </svg>
                         Detalii suplimentare despre interese
                       </label>
-                      <p className="text-sm text-slate-600">Descrie pe scurt ce ți-ar plăcea să cercetezi sau dezvoltarea pe care o urmărești.</p>
+                      <p className="text-sm text-slate-600">Descrie pe scurt ce vrei să înveți, să dezvolți sau să aprofundezi prin tema ta.</p>
                       <textarea
                         name="interests"
                         value={formData.interests}
@@ -954,9 +1074,9 @@ export default function StudentQuiz() {
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
-                        Obiective Profesionale
+                        Direcție profesională
                       </label>
-                      <p className="text-sm text-slate-600">Unde te vezi peste 5 ani? Vom încerca să găsim o temă care să te ajute în carieră.</p>
+                      <p className="text-sm text-slate-600">Spune-ne în ce direcție profesională vrei să mergi ca să putem calibra recomandările.</p>
                       <textarea
                         name="careerGoals"
                         value={formData.careerGoals}
@@ -1013,7 +1133,7 @@ export default function StudentQuiz() {
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      {isLoading ? 'Se procesează...' : 'Generează Recomandări AI'}
+                      {isLoading ? 'Se procesează...' : 'Afișează recomandările'}
                     </button>
                   )}
                 </div>
@@ -1026,7 +1146,7 @@ export default function StudentQuiz() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <p className="text-sm text-slate-700 leading-5">
-              <span className="font-bold">Sugestie:</span> Cu cât oferi mai multe detalii despre competențele tale și obiectivele tale, cu atât recomandările vor fi mai precise pentru profilul tău academic.
+              <span className="font-bold">Sugestie:</span> Cu cât oferi mai multe detalii despre competențele tale, interesul tău și direcția profesională, cu atât recomandările vor fi mai precise.
             </p>
           </div>
         </div>
@@ -1035,7 +1155,7 @@ export default function StudentQuiz() {
       <footer className="bg-slate-800 text-blue-100 px-6 py-6 border-t border-blue-300/20">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-sm">
           <p>© 2026 Universitatea "Ștefan cel Mare" Suceava</p>
-          <p className="text-blue-200">Quiz interactiv pentru recomandări de teme și coordonatori</p>
+          <p className="text-blue-200">Chestionar pentru recomandări de teme și contactarea profesorului coordonator</p>
         </div>
       </footer>
     </div>
