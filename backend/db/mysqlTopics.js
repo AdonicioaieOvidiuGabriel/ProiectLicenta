@@ -1,7 +1,44 @@
 import mysql from 'mysql2/promise';
 
+function pickEnv(env, ...keys) {
+  for (const key of keys) {
+    const value = env?.[key];
+    if (value !== undefined && value !== null && String(value).trim() !== '') {
+      return value;
+    }
+  }
+
+  return '';
+}
+
+function parseBoolean(value, fallback = false) {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (typeof value === 'number') {
+    return value !== 0;
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (['1', 'true', 'yes', 'on'].includes(normalized)) {
+      return true;
+    }
+    if (['0', 'false', 'no', 'off'].includes(normalized)) {
+      return false;
+    }
+  }
+
+  return fallback;
+}
+
 export function isMysqlConfigured(env = process.env) {
-  return Boolean(env.MYSQL_HOST && env.MYSQL_USER && env.MYSQL_DATABASE);
+  return Boolean(
+    pickEnv(env, 'MYSQL_HOST', 'DB_HOST')
+      && pickEnv(env, 'MYSQL_USER', 'DB_USER')
+      && pickEnv(env, 'MYSQL_DATABASE', 'DB_NAME')
+  );
 }
 
 export function createMysqlPool(env = process.env) {
@@ -9,12 +46,21 @@ export function createMysqlPool(env = process.env) {
     return null;
   }
 
+  const host = String(pickEnv(env, 'MYSQL_HOST', 'DB_HOST') || '').trim();
+  const isAzureMysqlHost = host.includes('.mysql.database.azure.com');
+  const useSsl = parseBoolean(pickEnv(env, 'MYSQL_SSL', 'DB_SSL'), isAzureMysqlHost);
+  const rejectUnauthorized = parseBoolean(
+    pickEnv(env, 'MYSQL_SSL_REJECT_UNAUTHORIZED', 'DB_SSL_REJECT_UNAUTHORIZED'),
+    true
+  );
+
   return mysql.createPool({
-    host: env.MYSQL_HOST,
-    port: Number(env.MYSQL_PORT || 3306),
-    user: env.MYSQL_USER,
-    password: env.MYSQL_PASSWORD || '',
-    database: env.MYSQL_DATABASE,
+    host,
+    port: Number(pickEnv(env, 'MYSQL_PORT', 'DB_PORT') || 3306),
+    user: pickEnv(env, 'MYSQL_USER', 'DB_USER'),
+    password: pickEnv(env, 'MYSQL_PASSWORD', 'DB_PASSWORD') || '',
+    database: pickEnv(env, 'MYSQL_DATABASE', 'DB_NAME'),
+    ssl: useSsl ? { rejectUnauthorized } : undefined,
     waitForConnections: true,
     connectionLimit: Number(env.MYSQL_CONNECTION_LIMIT || 10),
     namedPlaceholders: true,
