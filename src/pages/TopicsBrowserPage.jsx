@@ -5,8 +5,9 @@ import QuizAccessModal from '../components/QuizAccessModal';
 import AccountBadge from '../components/AccountBadge';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { clearAuthSession, readAuthSession, writeAuthSession } from '../utils/authSession';
+import { apiUrl } from '../utils/apiUrl';
 
-const API_URL = 'http://localhost:3001/api/topics';
+const API_URL = apiUrl('/api/topics');
 
 const normalizeText = (value) =>
   String(value || '')

@@ -17,13 +17,28 @@ dotenv.config({ path: join(__dirname, '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const frontendDistPath = join(__dirname, '..', 'dist');
+const allowedCorsOrigins = String(process.env.FRONTEND_URL || 'http://localhost:5173')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin(origin, callback) {
+    if (!origin || allowedCorsOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('CORS origin not allowed'));
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
 app.use(express.json({ limit: '2mb' }));
+
+if (fs.existsSync(frontendDistPath)) {
+  app.use(express.static(frontendDistPath));
+}
 
 function createAccountsPool() {
   if (!isMysqlConfigured(process.env)) {
@@ -3459,6 +3474,12 @@ app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(500).json({ error: 'Internal server error' });
 });
+
+if (fs.existsSync(frontendDistPath)) {
+  app.get(/^(?!\/api).*/, (req, res) => {
+    res.sendFile(join(frontendDistPath, 'index.html'));
+  });
+}
 
 async function startServer() {
   loadIntentRules();

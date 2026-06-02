@@ -3,8 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, BadgeInfo, CircleUserRound, LockKeyhole, Mail, Plus, RefreshCw, Search, Send, Trash2, UserCog, Users, BookOpenText } from 'lucide-react';
 import { clearAuthSession, readAuthSession, writeAuthSession } from '../utils/authSession';
 import { FACULTY_LABELS, FACULTY_PROFILES } from '../data/facultyProfiles';
+import { apiUrl } from '../utils/apiUrl';
 
-const ADMIN_API_ROOT = 'http://localhost:3001/api/admin';
+const ADMIN_API_ROOT = apiUrl('/api/admin');
 
 const emptyTopicForm = {
   id: '',
@@ -196,7 +197,7 @@ export default function UserDashboardPage() {
           throw new Error('Contul nu are un email valid pentru a încărca istoricul.');
         }
 
-        const response = await fetch(`http://localhost:3001/api/student/activity?email=${encodeURIComponent(studentEmail)}`);
+        const response = await fetch(apiUrl(`/api/student/activity?email=${encodeURIComponent(studentEmail)}`));
         let filteredSessions = [];
         let emailHistory = [];
 
@@ -495,7 +496,7 @@ export default function UserDashboardPage() {
 
     setSavingProfile(true);
     try {
-      const response = await fetch('http://localhost:3001/api/account/profile', {
+      const response = await fetch(apiUrl('/api/account/profile'), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

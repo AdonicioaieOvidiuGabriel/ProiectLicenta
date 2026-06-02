@@ -5,6 +5,7 @@ import AccountBadge from '../components/AccountBadge';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { FACULTY_LABELS, FACULTY_PROFILES } from '../data/facultyProfiles';
 import { clearAuthSession, readAuthSession, writeAuthSession } from '../utils/authSession';
+import { apiUrl } from '../utils/apiUrl';
 
 const FACULTY_QUIZ_CONFIG = FACULTY_PROFILES;
 
@@ -448,7 +449,7 @@ export default function StudentQuiz() {
     try {
       setIsLoading(true);
 
-      const response = await fetch('http://localhost:3001/api/recommend', {
+      const response = await fetch(apiUrl('/api/recommend'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

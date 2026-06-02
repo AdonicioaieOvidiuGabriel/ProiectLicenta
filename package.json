@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "start": "npm --prefix backend start",
+    "postinstall": "npm --prefix backend install --omit=dev",
     "lint": "eslint .",
     "preview": "vite preview"
   },

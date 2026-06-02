@@ -4,6 +4,7 @@ import AuthModal from '../components/AuthModal';
 import AccountBadge from '../components/AccountBadge';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { clearAuthSession, readAuthSession, writeAuthSession } from '../utils/authSession';
+import { apiUrl } from '../utils/apiUrl';
 
 const sortRecommendationsByScoreDesc = (items) =>
   [...(Array.isArray(items) ? items : [])].sort((left, right) => Number(right?.matchScore || 0) - Number(left?.matchScore || 0));
@@ -94,7 +95,7 @@ export default function RecommendationsPage() {
         try {
           setLoadingSentEmails(true);
           const response = await fetch(
-            `http://localhost:3001/api/sent-emails?studentEmail=${encodeURIComponent(studentEmail.trim())}`
+            apiUrl(`/api/sent-emails?studentEmail=${encodeURIComponent(studentEmail.trim())}`)
           );
           if (response.ok) {
             const data = await response.json();
@@ -198,7 +199,7 @@ export default function RecommendationsPage() {
 
     setIsGeneratingEmail(true);
     try {
-      const response = await fetch('http://localhost:3001/api/generate-email-text', {
+      const response = await fetch(apiUrl('/api/generate-email-text'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -241,7 +242,7 @@ export default function RecommendationsPage() {
 
     setIsGeneratingEmail(true);
     try {
-      const response = await fetch('http://localhost:3001/api/generate-email-text', {
+      const response = await fetch(apiUrl('/api/generate-email-text'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -285,7 +286,7 @@ export default function RecommendationsPage() {
 
     setIsSubmittingEmail(true);
     try {
-      const response = await fetch('http://localhost:3001/api/send-email', {
+      const response = await fetch(apiUrl('/api/send-email'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -324,7 +325,7 @@ export default function RecommendationsPage() {
       // Refresh sent emails list
       if (studentEmail.trim()) {
         const fetchResponse = await fetch(
-          `http://localhost:3001/api/sent-emails?studentEmail=${encodeURIComponent(studentEmail.trim())}`
+          apiUrl(`/api/sent-emails?studentEmail=${encodeURIComponent(studentEmail.trim())}`)
         );
         if (fetchResponse.ok) {
           const fetchData = await fetchResponse.json();
@@ -359,7 +360,7 @@ export default function RecommendationsPage() {
 
     try {
       setIsLoadingMore(true);
-      const response = await fetch('http://localhost:3001/api/recommend/more', {
+      const response = await fetch(apiUrl('/api/recommend/more'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

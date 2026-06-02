@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+import { apiUrl } from '../utils/apiUrl';
 
 function Field({ label, children }) {
   return (
@@ -138,7 +139,7 @@ export default function AuthModal({ isOpen, mode = 'login', onClose, onSwitchMod
     setErrorMessage('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/auth/signup', {
+      const response = await fetch(apiUrl('/api/auth/signup'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -181,7 +182,7 @@ export default function AuthModal({ isOpen, mode = 'login', onClose, onSwitchMod
     setErrorMessage('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/auth/signup/verify-pin', {
+      const response = await fetch(apiUrl('/api/auth/signup/verify-pin'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -241,7 +242,7 @@ export default function AuthModal({ isOpen, mode = 'login', onClose, onSwitchMod
     setErrorMessage('');
 
     try {
-      const response = await fetch(`http://localhost:3001/api/auth/${isLogin ? 'login' : 'signup'}`, {
+      const response = await fetch(apiUrl(`/api/auth/${isLogin ? 'login' : 'signup'}`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -473,7 +474,7 @@ export default function AuthModal({ isOpen, mode = 'login', onClose, onSwitchMod
                       <button onClick={async () => {
                         setResetSubmitting(true); setResetError(''); setResetMessage('');
                         try {
-                          const resp = await fetch('http://localhost:3001/api/auth/password-reset/request', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ email: resetEmail }) });
+                          const resp = await fetch(apiUrl('/api/auth/password-reset/request'), { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ email: resetEmail }) });
                           const data = await resp.json();
                           if (!resp.ok) throw new Error(data?.message || data?.error || 'Eroare la trimitere.');
                           setResetMessage(data?.message || 'Dacă există un cont, vei primi instrucțiuni pe email.');

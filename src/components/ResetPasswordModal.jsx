@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { apiUrl } from '../utils/apiUrl';
 
 function Field({ label, children }) {
   return (
@@ -73,7 +74,7 @@ export default function ResetPasswordModal({ isOpen, onClose, initialEmail = '',
 
     setIsSubmitting(true);
     try {
-      const resp = await fetch('http://localhost:3001/api/auth/password-reset/confirm', {
+      const resp = await fetch(apiUrl('/api/auth/password-reset/confirm'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, token, newPassword: password })
